@@ -16,7 +16,7 @@
   <h1>Secret <em>Santa</em></h1>
   <p id="heroText">Tell us if you're in. After the draw you'll get a personal link to discover who you're getting a present for (max €20). Shhh!</p>
   <div><button class="replay" onclick="window.openIntro&&window.openIntro()">🎬 Watch the intro</button></div>
-  <div class="datechip">🎁 Gift exchange &amp; lunch · <b>Tuesday 22 December · 12:15 · Lunch area -1</b></div>
+  <div class="datechip">🎁 Gift exchange &amp; lunch · <b>Thursday 17 December · 12:15 · Lunch area -1</b></div>
 </header>
 
 <main class="wrap">
@@ -54,7 +54,7 @@ function rsvpCard(){
     if(!name.value.trim()){ status.textContent="Please write your name first."; name.focus(); return; }
     const subject = yes ? `Secret Santa – I'm in! 🎁 (${name.value.trim()})` : `Secret Santa – not this year (${name.value.trim()})`;
     const body = yes
-      ? `Hi Enrique,\n\nCount me in for the PEDA Secret Santa on Tuesday 22 December!\n\nName: ${name.value.trim()}\nWish list: ${wish.value.trim()||"(surprise me!)"}\n\nThanks!`
+      ? `Hi Enrique,\n\nCount me in for the PEDA Secret Santa on Thursday 17 December!\n\nName: ${name.value.trim()}\nWish list: ${wish.value.trim()||"(surprise me!)"}\n\nThanks!`
       : `Hi Enrique,\n\nThanks for organising — I'll skip the gift exchange this year.\n\nName: ${name.value.trim()}\n\nBest wishes!`;
     location.href=`mailto:${ORGANISER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     status.textContent = `Your email to ${ORGANISER_EMAIL} should open now — just press Send. If nothing opens, email Enrique directly.`;
@@ -74,7 +74,7 @@ function rsvpCard(){
       el("li",{},"Say yes or no with the buttons (it sends Enrique a short email)."),
       el("li",{},`On ${EVENT.deadline} sign-ups close and the draw is made among those who said yes.`),
       el("li",{},"You receive a personal link: open the gift and find out who you're Secret Santa for."),
-      el("li",{},"Bring your gift (max €20) to lunch on 22 December!"))));
+      el("li",{},"Bring your gift (max €20) to lunch on 17 December!"))));
 }
 
 async function personal(){
@@ -105,7 +105,7 @@ async function personal(){
   render();
   $("#lower").append(infoBlock(), el("section",{class:"card"},
     el("h3",{style:"font-size:20px;margin-bottom:10px"},"Keep it secret 🤫"),
-    el("p",{class:"muted",style:"margin:0;line-height:1.6"},"This link is only for you — please don't forward it. You can open it again any time to check your match before 22 December.")));
+    el("p",{class:"muted",style:"margin:0;line-height:1.6"},"This link is only for you — please don't forward it. You can open it again any time to check your match before 17 December.")));
 }
 
 setupIntro(); snow();

@@ -1,7 +1,7 @@
 /* Shared helpers — PEDA Secret Santa 2026 */
 const ORGANISER_EMAIL = "enrique.ezquerra@eursc.eu";
-const EVENT = { date:"Tuesday 22 December 2026", time:"12:15", place:"Lunch area -1", budget:"€20 maximum", deadline:"Friday 13 November",
-  start:new Date("2026-12-22T12:15:00+01:00"), startUTC:"2026-12-22T11:15:00Z", endUTC:"2026-12-22T13:00:00Z",
+const EVENT = { date:"Thursday 17 December 2026", time:"12:15", place:"Lunch area -1", budget:"€20 maximum", deadline:"Friday 13 November",
+  start:new Date("2026-12-17T12:15:00+01:00"), startUTC:"2026-12-17T11:15:00Z", endUTC:"2026-12-17T13:00:00Z",
   subject:"PEDA Secret Santa – lunch & gift exchange 🎁",
   body:"Lunch together and Secret Santa gift exchange with the Pedagogical Development Unit. Don't forget your gift (max €20)!" };
 
@@ -29,7 +29,7 @@ function icsUrl(){ const f=d=>d.replace(/[-:]/g,"").replace(/\.\d+/,""); const e
   return URL.createObjectURL(new Blob([ics],{type:"text/calendar"})); }
 function calendarBlock(){
   return el("div",{style:"margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:8px"},
-    el("div",{style:"font-weight:700"},`Save the date: Tue 22 Dec · ${EVENT.time} · ${EVENT.place}`),
+    el("div",{style:"font-weight:700"},`Save the date: Thu 17 Dec · ${EVENT.time} · ${EVENT.place}`),
     el("div",{style:"display:flex;gap:10px;flex-wrap:wrap;justify-content:center"},
       el("a",{class:"btn small",href:outlookLink(),target:"_blank",rel:"noopener"},"📅 Add to Outlook"),
       el("a",{class:"btn ghost small",href:icsUrl(),download:"PEDA-Secret-Santa.ics"},"📅 Download .ics (Outlook desktop)")));
@@ -58,10 +58,8 @@ function confetti(){ const c=$("#confetti"),x=c.getContext("2d");c.width=innerWi
 /* ---- intro video ---- */
 function setupIntro(){
   const box=$("#intro"), v=$("#introVideo"), play=$("#introPlay"), skip=$("#introSkip"); if(!box) return;
-  let seen=false; try{seen=localStorage.getItem("peda-santa-intro")==="1";}catch(e){}
   const close=()=>{box.classList.add("hide");try{v.pause();}catch(e){}try{localStorage.setItem("peda-santa-intro","1");}catch(e){}};
   const start=()=>{v.muted=false;v.currentTime=0;v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});play.textContent="Enter 🎁";play.onclick=close;};
   window.openIntro=()=>{box.classList.remove("hide");v.currentTime=0;play.textContent="▶ Play with sound";play.classList.remove("enter");play.onclick=start;};
   play.onclick=start; skip.onclick=close; v.addEventListener("ended",()=>play.classList.add("enter"));
-  if(seen) box.classList.add("hide");
 }

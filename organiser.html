@@ -109,7 +109,7 @@ async function linkFor(g){
 async function mailFor(p){
   const link=await linkFor(p.key);
   const subject="🎅 Your PEDA Secret Santa is ready!";
-  const body=`Hi ${p.first},\n\nThe Secret Santa draw is done! 🎁\nOpen your personal link to discover who you'll be Secret Santa for (only you can see it — please don't forward this email):\n\n${link}\n\nSee you on Tuesday 22 December at 12:15 in the Lunch area -1. Gift budget: €20 maximum.\n\nHo ho ho,\nEnrique`;
+  const body=`Hi ${p.first},\n\nThe Secret Santa draw is done! 🎁\nOpen your personal link to discover who you'll be Secret Santa for (only you can see it — please don't forward this email):\n\n${link}\n\nSee you on Thursday 17 December at 12:15 in the Lunch area -1. Gift budget: €20 maximum.\n\nHo ho ho,\nEnrique`;
   return `mailto:${p.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
