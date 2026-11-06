@@ -80,9 +80,22 @@ function render(err){
     const n=Object.keys(S.sent).length;
     steps.append(el("span",{class:"hint"},`${n} of ${Object.keys(S.draw).length} links sent.`),
       el("button",{class:"btn ghost small",onclick:()=>{ if(!window.confirmRedo){ window.confirmRedo=true; render(); return; } S.draw=null; S.sent={}; window.confirmRedo=false; save(); render(); }},
-        window.confirmRedo?"Click again to confirm: links already sent stop being valid matches":"Undo draw / change participants"));
+        window.confirmRedo?"Click again to confirm: links already sent stop being valid matches":"Undo draw / change participants"),
+      el("button",{class:"btn ghost small",onclick:()=>{ window.showStage=window.showStage===2?0:(window.showStage||0)+1; render(); }},
+        window.showStage===2?"🙈 Hide matches":window.showStage===1?"Click again — this spoils the surprise (including who gives to you!)":"👀 Show all matches"));
   }
   m.append(steps);
+  if(drawn && window.showStage===2){
+    const list=el("div",{style:"margin-top:18px;display:grid;gap:8px"});
+    for(const[g,r] of Object.entries(S.draw)){
+      const G=R.byKey[g], Rc=R.byKey[r];
+      list.append(el("div",{style:"display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 12px"},
+        el("div",{style:"width:36px"},avatar(G)), el("b",{},`${G.first} ${G.last}`), el("span",{style:"color:var(--red);font-weight:700"},"🎁 →"),
+        el("div",{style:"width:36px"},avatar(Rc)), el("span",{},`${Rc.first} ${Rc.last}`), S.wish[r]?el("span",{class:"hint"},`· wish: ${S.wish[r]}`):""));
+    }
+    list.querySelectorAll(".av").forEach(a=>{a.style.width="36px";a.style.height="36px";a.style.fontSize="13px";});
+    m.append(el("h3",{style:"margin-top:22px;font-size:18px"},"All matches (giver → receiver)"), list);
+  }
 }
 
 function derange(keys){ // one random cycle: nobody draws themselves, everyone gives and receives once
