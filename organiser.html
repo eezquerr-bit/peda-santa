@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organiser – PEDA Secret Santa 2026</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<style>
+.hero{padding:40px 20px 80px}
+table{width:100%;border-collapse:collapse;margin-top:14px}
+td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-size:14px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td .av{width:40px;height:40px;margin:0}
+td .av.init{font-size:14px}
+.toggle{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700}
+.toggle.on{background:var(--pine);border-color:var(--pine);color:#fff}
+.sent{color:var(--pine);font-weight:700;font-size:13px}
+td input{padding:6px 10px;font-size:13px}
+.steps{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="kicker">Organiser panel · only for Enrique</div>
+  <h1>Secret <em>Santa</em> HQ</h1>
+  <p>Mark who said yes, paste their wish lists, draw, then send everyone their personal link. You never see who got whom.</p>
+</header>
+<main class="wrap"><section class="card" id="main"></section></main>
+<footer>Your progress is saved in this browser only. Use the same computer and browser until all links are sent.</footer>
+<canvas id="confetti"></canvas>
+<script src="roster.js"></script>
+<script src="common.js"></script>
+<script>
+const STORE="peda-santa-organiser";
+let S={key:"",in:{},wish:{},draw:null,sent:{}}; try{Object.assign(S,JSON.parse(localStorage.getItem(STORE)||"{}"));}catch(e){}
+const save=()=>{try{localStorage.setItem(STORE,JSON.stringify(S));}catch(e){}};
+let R=null;
+
+async function unlock(k){ try{ R=await loadRoster(k.trim()); S.key=k.trim(); save(); render(); } catch(e){ R=null; render("That key doesn't open the roster."); } }
+
+function render(err){
+  const m=$("#main"); m.replaceChildren();
+  if(!R){
+    const i=el("input",{placeholder:"Organiser key",style:"max-width:360px"});
+    m.append(el("h2",{},"Unlock"),el("p",{class:"muted"},"Paste the organiser key Claude gave you."),
+      el("div",{class:"steps"},i,el("button",{class:"btn",onclick:()=>unlock(i.value)},"Unlock")), err?el("div",{class:"notice"},err):"");
+    return;
+  }
+  const yes=R.people.filter(p=>S.in[p.key]);
+  const drawn=!!S.draw;
+  m.append(el("h2",{},drawn?"2 · Send the links":"1 · Who's in?"),
+    el("p",{class:"muted"},drawn
+      ? `The draw is done for ${Object.keys(S.draw).length} people. Click ✉ to open a ready-made Outlook email for each person, then press Send.`
+      : `Tick everyone who replied “I'm in” and paste their wish list. ${yes.length} selected.`));
+  const tb=el("tbody");
+  for(const p of R.people){
+    const on=!!S.in[p.key];
+    if(drawn && !S.draw[p.key]) continue;
+    const row=el("tr",{},el("td",{style:"width:52px"},avatar(p)),el("td",{},el("b",{},`${p.first} ${p.last}`),el("div",{class:"hint"},p.email)));
+    if(!drawn){
+      const w=el("input",{placeholder:"wish list (optional)",value:S.wish[p.key]||""}); w.oninput=()=>{S.wish[p.key]=w.value;save();};
+      row.append(el("td",{},el("button",{class:"toggle"+(on?" on":""),onclick:()=>{S.in[p.key]=!on;save();render();}},on?"✓ In":"—")), el("td",{style:"width:45%"},w));
+    } else {
+      const status=el("span",{class:"sent"},S.sent[p.key]?"✓ sent":"");
+      row.append(el("td",{},
+        el("button",{class:"btn small",onclick:async()=>{ location.href=await mailFor(p); S.sent[p.key]=true; save(); status.textContent="✓ sent"; }},"✉ Email link"), " ",
+        el("button",{class:"btn ghost small",onclick:async(e)=>{ try{ await navigator.clipboard.writeText(await linkFor(p.key)); e.target.textContent="Copied ✓"; }catch(x){ e.target.textContent="Copy failed"; } }},"Copy link")),
+        el("td",{},status));
+    }
+    tb.append(row);
+  }
+  m.append(el("table",{},el("thead",{},el("tr",{},el("th",{}),el("th",{},"Person"),el("th",{},drawn?"Send":"Taking part"),el("th",{},drawn?"":"Wish list"))),tb));
+  const steps=el("div",{class:"steps"});
+  if(!drawn){
+    steps.append(el("button",{class:"btn",disabled:yes.length<3,onclick:()=>{ if(yes.length<3) return; S.draw=derange(yes.map(p=>p.key)); S.sent={}; save(); confetti(); render(); }},
+      yes.length<3?"Select at least 3 people":`🎲 Draw for ${yes.length} people`));
+  } else {
+    const n=Object.keys(S.sent).length;
+    steps.append(el("span",{class:"hint"},`${n} of ${Object.keys(S.draw).length} links sent.`),
+      el("button",{class:"btn ghost small",onclick:()=>{ if(!window.confirmRedo){ window.confirmRedo=true; render(); return; } S.draw=null; S.sent={}; window.confirmRedo=false; save(); render(); }},
+        window.confirmRedo?"Click again to confirm: links already sent stop being valid matches":"Undo draw / change participants"));
+  }
+  m.append(steps);
+}
+
+function derange(keys){ // one random cycle: nobody draws themselves, everyone gives and receives once
+  const a=keys.slice(); for(let i=a.length-1;i>0;i--){const j=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  const d={}; a.forEach((g,i)=>d[g]=a[(i+1)%a.length]); return d;
+}
+async function linkFor(g){
+  const r=S.draw[g]; const t=await encryptJSON(R.key,{g,r,w:(S.wish[r]||"").trim()});
+  const u=new URL("index.html",location.href); u.search=new URLSearchParams({k:S.key,t}).toString(); return u.toString();
+}
+async function mailFor(p){
+  const link=await linkFor(p.key);
+  const subject="🎅 Your PEDA Secret Santa is ready!";
+  const body=`Hi ${p.first},\n\nThe Secret Santa draw is done! 🎁\nOpen your personal link to discover who you'll be Secret Santa for (only you can see it — please don't forward this email):\n\n${link}\n\nSee you on Tuesday 22 December at 12:15 in the Lunch area -1. Gift budget: €20 maximum.\n\nHo ho ho,\nEnrique`;
+  return `mailto:${p.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+if(S.key) unlock(S.key); else render();
+</script>
+</body>
+</html>

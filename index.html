@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEDA Secret Santa 2026</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<header class="hero">
+  <canvas id="snow"></canvas>
+  <div class="kicker">Pedagogical Development Unit · OSGES</div>
+  <h1>Secret <em>Santa</em></h1>
+  <p id="heroText">Tell us if you're in. After the draw you'll get a personal link to discover who you're getting a present for (max €20). Shhh!</p>
+  <div><button class="replay" onclick="window.openIntro&&window.openIntro()">🎬 Watch the intro</button></div>
+  <div class="datechip">🎁 Gift exchange &amp; lunch · <b>Tuesday 22 December · 12:15 · Lunch area -1</b></div>
+</header>
+
+<main class="wrap">
+  <section class="card" id="main"><div class="stage muted">Loading the sleigh…</div></section>
+  <div class="grid2" id="lower"></div>
+</main>
+<footer>PEDA Secret Santa 2026 · Each personal link only shows its owner's match.</footer>
+<canvas id="confetti"></canvas>
+
+<div id="intro" role="dialog" aria-label="Secret Santa intro">
+  <div class="frame">
+    <video id="introVideo" playsinline preload="auto" poster="poster.jpg"><source src="intro.mp4" type="video/mp4"></video>
+    <div class="shade"></div>
+    <div class="title"><span>Secret</span><span>Santa</span><span>is here 🎅</span></div>
+    <div class="controls">
+      <button class="play" id="introPlay">▶ Play with sound</button>
+      <button class="skip" id="introSkip">Skip intro</button>
+    </div>
+  </div>
+</div>
+
+<script src="roster.js"></script>
+<script src="common.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const K = params.get("k"), T = params.get("t");
+let revealed = false;
+
+function rsvpCard(){
+  const m=$("#main"); m.replaceChildren();
+  const name=el("input",{placeholder:"Your name"});
+  const wish=el("textarea",{rows:3,placeholder:"Optional wish list for your Secret Santa (max €20) — e.g. good chocolate, a book, anything with cats…"});
+  const status=el("div",{class:"hint",style:"margin-top:10px"});
+  const send=(yes)=>{
+    if(!name.value.trim()){ status.textContent="Please write your name first."; name.focus(); return; }
+    const subject = yes ? `Secret Santa – I'm in! 🎁 (${name.value.trim()})` : `Secret Santa – not this year (${name.value.trim()})`;
+    const body = yes
+      ? `Hi Enrique,\n\nCount me in for the PEDA Secret Santa on Tuesday 22 December!\n\nName: ${name.value.trim()}\nWish list: ${wish.value.trim()||"(surprise me!)"}\n\nThanks!`
+      : `Hi Enrique,\n\nThanks for organising — I'll skip the gift exchange this year.\n\nName: ${name.value.trim()}\n\nBest wishes!`;
+    location.href=`mailto:${ORGANISER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    status.textContent = `Your email to ${ORGANISER_EMAIL} should open now — just press Send. If nothing opens, email Enrique directly.`;
+  };
+  m.append(el("div",{class:"stage"},
+    el("h2",{},"Are you in? 🎅"),
+    el("p",{class:"muted"},`Taking part is completely optional. Please answer by ${EVENT.deadline}.`),
+    el("div",{style:"max-width:480px;margin:18px auto 0;text-align:left;display:grid;gap:10px"}, name, wish),
+    el("div",{style:"display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px"},
+      el("button",{class:"btn",onclick:()=>send(true)},"Count me in 🎁"),
+      el("button",{class:"btn ghost",onclick:()=>send(false)},"Not this year")),
+    status,
+    el("div",{class:"hint",style:"margin-top:18px"},"After the deadline Enrique runs the draw and emails everyone their personal link.")));
+  $("#lower").append(infoBlock(), el("section",{class:"card"},
+    el("h3",{style:"font-size:20px;margin-bottom:10px"},"How it works"),
+    el("ol",{style:"margin:0;padding-left:20px;line-height:1.7"},
+      el("li",{},"Say yes or no with the buttons (it sends Enrique a short email)."),
+      el("li",{},`On ${EVENT.deadline} sign-ups close and the draw is made among those who said yes.`),
+      el("li",{},"You receive a personal link: open the gift and find out who you're Secret Santa for."),
+      el("li",{},"Bring your gift (max €20) to lunch on 22 December!"))));
+}
+
+async function personal(){
+  let roster, a;
+  try{ roster=await loadRoster(K); a=await decryptJSON(roster.key, T); }
+  catch(e){ $("#main").replaceChildren(el("div",{class:"stage"},el("h2",{},"Hmm, this link doesn't work"),el("p",{class:"muted"},"Please make sure you opened the full link from Enrique's email, or ask him to send it again."))); return; }
+  const me=roster.byKey[a.g], r=roster.byKey[a.r];
+  $("#heroText").textContent=`Hi ${me.first}! Your gift is waiting below. Make sure nobody is looking over your shoulder 👀`;
+  let opened=false; try{opened=localStorage.getItem("peda-santa-open-"+a.g)==="1";}catch(e){}
+  const render=()=>{
+    const m=$("#main"); m.replaceChildren(); const stage=el("div",{class:"stage"});
+    if(!opened){
+      stage.append(el("h2",{},`Ho ho ho, ${me.first}!`),el("p",{class:"muted"},"Open the gift to find out who you'll be Secret Santa for."));
+      const go=async()=>{ const g=$(".gift"); g.classList.add("open"); confetti(); await new Promise(r=>setTimeout(r,900)); opened=true; try{localStorage.setItem("peda-santa-open-"+a.g,"1");}catch(e){} render(); };
+      stage.append(el("button",{class:"gift","aria-label":"Open the gift",onclick:go},el("div",{class:"box"}),el("div",{class:"lid"}),el("div",{class:"rib"}),el("div",{class:"bow"})),
+        el("button",{class:"btn",onclick:go},"Open my gift 🎁"));
+    } else {
+      stage.append(el("h2",{},`${me.first}, you're the Secret Santa of…`),
+        el("div",{class:"reveal",onclick:()=>{revealed=!revealed;render();}},
+          el("div",{class:revealed?"":"blur"},avatar(r)),
+          el("div",{class:"big"+(revealed?"":" blur")},`${r.first} ${r.last}`),
+          el("div",{class:"hint"},revealed?"Tap to hide again (in case someone is peeking 👀)":"Tap to reveal — make sure nobody is looking!")));
+      if(revealed) stage.append(el("div",{class:"wish"},el("b",{},`${r.first}'s wish list: `), a.w||"No wish list — surprise them! 🎁", el("div",{class:"hint",style:"margin-top:8px"},"Remember: €20 maximum.")));
+      stage.append(calendarBlock());
+    }
+    m.append(stage);
+  };
+  render();
+  $("#lower").append(infoBlock(), el("section",{class:"card"},
+    el("h3",{style:"font-size:20px;margin-bottom:10px"},"Keep it secret 🤫"),
+    el("p",{class:"muted",style:"margin:0;line-height:1.6"},"This link is only for you — please don't forward it. You can open it again any time to check your match before 22 December.")));
+}
+
+setupIntro(); snow();
+if(K && T) personal(); else rsvpCard();
+</script>
+</body>
+</html>
