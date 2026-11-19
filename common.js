@@ -1,7 +1,7 @@
 /* Shared helpers — PEDA Secret Santa 2026 */
 const ORGANISER_EMAIL = "enrique.ezquerra@eursc.eu";
-const EVENT = { date:"Thursday 17 December 2026", time:"12:15", place:"Lunch area -1", budget:"€20 maximum", deadline:"Friday 13 November",
-  start:new Date("2026-12-17T12:15:00+01:00"), startUTC:"2026-12-17T11:15:00Z", endUTC:"2026-12-17T13:00:00Z",
+const EVENT = { date:"Thursday 17 December 2026", time:"11:15", place:"Lunch area -1", budget:"€20 maximum", deadline:"Friday 13 November",
+  start:new Date("2026-12-17T11:15:00+01:00"), startUTC:"2026-12-17T10:15:00Z", endUTC:"2026-12-17T12:15:00Z",
   subject:"PEDA Secret Santa – lunch & gift exchange 🎁",
   body:"Lunch together and Secret Santa gift exchange with the Pedagogical Development Unit. Don't forget your gift (max €20)!" };
 
